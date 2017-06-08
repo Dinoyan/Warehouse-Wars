@@ -191,11 +191,7 @@ class KeyboardPlayer(Player):
             Actor.move(self, other, dx, dy)
             # Set result to True.
             res = True
-        
-        elif:
-            res = True
-            pass
-    
+
         else:
             # Set result to False.
             res = False
@@ -239,8 +235,14 @@ class Box(Actor):
         return False
 
 # COMPLETE THIS CLASS FOR PART 2 OF LAB
-class Wall: 
-    pass
+class Wall(Actor):
+    '''
+    (Actor, str, Stage, int, int) -> None
+    Construct a Wall on the given stage, at given position.
+    '''
+    def __init__(self, icon_file, stage, x, y):
+        Actor.__init__(self, icon_file, stage, x, y)
+        
     
 class Stage:
     '''

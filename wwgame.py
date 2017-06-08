@@ -2,11 +2,11 @@ import sys, pygame, random
 from ww import *
 pygame.init()
 
-ww=Stage(20, 20, 24)
+ww = Stage(20, 20, 24)
 ww.set_player(KeyboardPlayer("icons/face-cool-24.png", ww))
 
 # ADD WALL TO THE STAGE.
-ww.add_actor(Wall("icons/wall.jpg", ww, 3, 4))
+# ww.add_actor(Wall("icons/wall.jpg", ww, 3, 4))
 
 # ADD MONSTERS TO THE STAGE.
 ww.add_actor(Monster("icons/face-devil-grin-24.png", ww, 0, 3, 1))
