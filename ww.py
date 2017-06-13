@@ -173,29 +173,32 @@ class KeyboardPlayer(Player):
 
         # Where we are supposed to move. 
         new_x = self._x + dx
-        new_y = self._y + dy  
+        new_y = self._y + dy
         
+        current_stage = self._stage
+        on_stage = current_stage.is_in_bounds(new_x, new_y)
+        
+       
+        check_coor = current_stage.get_actor(new_x, new_y)
+                
         # FIX THIS ACCORDING TO LAB INSTRUCTIONS IN PART 1
         # TODO: Check if (new_x, new_y) is on the stage. DONE
-        #       If it is, then determine if another Actor is occupying that spot. If so, DONE
+        #       If it is, then determine if another Actor is occupying that spot. If so,
         #       self asks them to move. If they moved, then we can occupy the spot. Otherwise
         #       we can't move. We return True if we moved and False otherwise.
-
-        # Check if the new_x and new_y are on the stage.
-        on_stage = Stage.is_in_bounds(new_x, new_y)
-        # Check is there is an actor occupying the new (x,y).
-        check_coor = Stage.get_actor(new_x, new_y)
-        # Check if both the conditions are True.
-        if on_stage and check_coor == None:
-            # Move the player
-            Actor.move(self, other, dx, dy)
-            # Set result to True.
+        if on_stage and check_coor == None :
             res = True
-
+            Actor.move(self, other, dx, dy)
+        elif (check_coor is not None) and on_stage:
+            Box.move(check_coor, self, dx, dy)
+            check_coor = current_stage.get_actor(new_x, new_y)
+            if(check_coor == None):
+                Actor.move(self, other, dx, dy)
+                res = True
+            else:
+                res = False
         else:
-            # Set result to False.
             res = False
-        # Return the result(res)
         return res
         
 class Box(Actor):
@@ -209,7 +212,8 @@ class Box(Actor):
         Construct a Box on the given stage, at given position.
         '''
         
-        Actor.__init__(self, icon_file, stage, x, y)
+        Actor.__init__(self, icon_file, stage, x, y)    
+
 
     def move(self, other, dx, dy):
         '''
@@ -223,6 +227,12 @@ class Box(Actor):
 
         new_x = self._x + dx
         new_y = self._y + dy
+        
+        current_stage = self._stage
+        on_stage = current_stage.is_in_bounds(new_x, new_y)
+        
+        check_coor = current_stage.get_actor(new_x, new_y)
+        
 
         # FIX THIS ACCORDING TO LAB INSTRUCTIONS IN PART 1
         # TODO:
@@ -231,18 +241,33 @@ class Box(Actor):
         # to move, also the same direction. If they moved, the space is now
         # empty, so we now move into (new_x, new_y). If we successfully
         # moved, then we return True, otherwise, we return False. '''
-
-        return False
+        
+        if on_stage and check_coor == None:
+            res = True
+            Actor.move(self, other, dx, dy)
+        #elif (check_coor is not None) and on_stage:
+        while check_coor is not None and on_stage:
+            Actor.move(self,check_coor, dx, dy)
+            check_coor = current_stage.get_actor(self._x + dx, self._y +dy)
+            on_stage = current_stage.is_in_bounds(self._x, self._y)
+            if(check_coor == None and on_stage):
+                Actor.move(self, other, dx, dy)
+                res = True
+            else:
+                res = False
+            
+        else:
+            res = False        
+        return res
 
 # COMPLETE THIS CLASS FOR PART 2 OF LAB
-class Wall(Actor):
+class Wall: 
     '''
     (Actor, str, Stage, int, int) -> None
     Construct a Wall on the given stage, at given position.
     '''
     def __init__(self, icon_file, stage, x, y):
-        Actor.__init__(self, icon_file, stage, x, y)
-        
+        Actor.__init__(self, icon_file, stage, x, y)    
     
 class Stage:
     '''
@@ -393,7 +418,6 @@ class Stage:
             rect = pygame.Rect(x*d, y*d, d, d)
             self._screen.blit(icon, rect)
         pygame.display.flip()
-
 
 class Monster(Actor):
     '''A Monster class.'''
