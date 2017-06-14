@@ -177,9 +177,11 @@ class KeyboardPlayer(Player):
         
         current_stage = self._stage
         on_stage = current_stage.is_in_bounds(new_x, new_y)
-        
-       
+
         check_coor = current_stage.get_actor(new_x, new_y)
+        
+        if check_coor is not None:
+            print(check_coor._icon)
                 
         # FIX THIS ACCORDING TO LAB INSTRUCTIONS IN PART 1
         # TODO: Check if (new_x, new_y) is on the stage. DONE
@@ -190,7 +192,7 @@ class KeyboardPlayer(Player):
             res = True
             Actor.move(self, other, dx, dy)
         elif (check_coor is not None) and on_stage:
-            Box.move(check_coor, self, dx, dy)
+            check_coor.move(self, dx, dy)
             check_coor = current_stage.get_actor(new_x, new_y)
             if(check_coor == None):
                 Actor.move(self, other, dx, dy)
@@ -199,8 +201,10 @@ class KeyboardPlayer(Player):
                 res = False
         else:
             res = False
+
         return res
-        
+
+
 class Box(Actor):
     '''
     A Box Actor.
@@ -212,8 +216,7 @@ class Box(Actor):
         Construct a Box on the given stage, at given position.
         '''
         
-        Actor.__init__(self, icon_file, stage, x, y)    
-
+        Actor.__init__(self, icon_file, stage, x, y)  
 
     def move(self, other, dx, dy):
         '''
@@ -232,7 +235,6 @@ class Box(Actor):
         on_stage = current_stage.is_in_bounds(new_x, new_y)
         
         check_coor = current_stage.get_actor(new_x, new_y)
-        
 
         # FIX THIS ACCORDING TO LAB INSTRUCTIONS IN PART 1
         # TODO:
@@ -241,34 +243,35 @@ class Box(Actor):
         # to move, also the same direction. If they moved, the space is now
         # empty, so we now move into (new_x, new_y). If we successfully
         # moved, then we return True, otherwise, we return False. '''
-        
+        # Check if the Actor is still on the stage and the new coor space is
+        # empty.
         if on_stage and check_coor == None:
+            # Set the res to True
             res = True
             Actor.move(self, other, dx, dy)
-        #elif (check_coor is not None) and on_stage:
-        while check_coor is not None and on_stage:
-            Actor.move(self,check_coor, dx, dy)
-            check_coor = current_stage.get_actor(self._x + dx, self._y +dy)
-            on_stage = current_stage.is_in_bounds(self._x, self._y)
-            if(check_coor == None and on_stage):
+        # If the space is occupied, Ask the Actor to move.
+        elif (check_coor is not None) and on_stage:
+            check_coor.move(self, dx, dy)
+            check_coor = current_stage.get_actor(new_x, new_y)
+            if(check_coor == None):
                 Actor.move(self, other, dx, dy)
                 res = True
             else:
                 res = False
-            
         else:
-            res = False        
+            res = False 
         return res
 
 # COMPLETE THIS CLASS FOR PART 2 OF LAB
-class Wall: 
+class Wall(Actor): 
     '''
-    (Actor, str, Stage, int, int) -> None
     Construct a Wall on the given stage, at given position.
     '''
     def __init__(self, icon_file, stage, x, y):
-        Actor.__init__(self, icon_file, stage, x, y)    
-    
+        '''(Actor, str, Stage, int, int) -> None
+        '''
+        Actor.__init__(self, icon_file, stage, x, y) 
+
 class Stage:
     '''
     A Stage that holds all the game's Actors (Player, monsters, boxes, etc.).
@@ -472,8 +475,14 @@ class Monster(Actor):
         # MONSTERS SHOULD BOUNCE BACK FROM BOXES AND OTHER MONSTERS
         # HINT: Use actor = self._stage.get_actor(new_x,new_y)
         # YOUR CODE HERE
+        actor = self._stage.get_actor(new_x, new_y)
+        if actor is not None:
+            res = Actor.move(self, other, -dx, dy)
+            
+        else:
+            res = Actor.move(self, other, dx, dy)
                 
-        return Actor.move(self, other, dx, dy)
+        return res
 
     def is_dead(self):
         '''
