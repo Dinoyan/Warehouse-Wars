@@ -15,7 +15,7 @@ class Actor:
         that it should appear on, and the speed with which it should
         update, construct an Actor object.
         '''
-        
+
         self._icon = pygame.image.load(icon_file) # the image image to display of self
         self.set_position(x, y) # self's location on the stage
         self._stage = stage # the stage that self is on
@@ -46,7 +46,7 @@ class Actor:
         (Actor) -> pygame.Surface
         Return the image associated with this Actor.
         '''
-        
+
         return self._icon
 
     def is_dead(self):
@@ -179,19 +179,17 @@ class KeyboardPlayer(Player):
         on_stage = current_stage.is_in_bounds(new_x, new_y)
 
         check_coor = current_stage.get_actor(new_x, new_y)
-        
-        if check_coor is not None:
-            print(check_coor._icon)
-                
+ 
         # FIX THIS ACCORDING TO LAB INSTRUCTIONS IN PART 1
         # TODO: Check if (new_x, new_y) is on the stage. DONE
         #       If it is, then determine if another Actor is occupying that spot. If so,
         #       self asks them to move. If they moved, then we can occupy the spot. Otherwise
         #       we can't move. We return True if we moved and False otherwise.
+        
         if on_stage and check_coor == None :
             res = True
             Actor.move(self, other, dx, dy)
-        elif (check_coor is not None) and on_stage:
+        elif (check_coor is not None) and on_stage and str(check_coor._icon) == '<Surface(24x24x32 SW)>':
             check_coor.move(self, dx, dy)
             check_coor = current_stage.get_actor(new_x, new_y)
             if(check_coor == None):
@@ -203,7 +201,7 @@ class KeyboardPlayer(Player):
             res = False
 
         return res
-
+    
 
 class Box(Actor):
     '''
@@ -235,7 +233,7 @@ class Box(Actor):
         on_stage = current_stage.is_in_bounds(new_x, new_y)
         
         check_coor = current_stage.get_actor(new_x, new_y)
-
+    
         # FIX THIS ACCORDING TO LAB INSTRUCTIONS IN PART 1
         # TODO:
         # If (new_x, new_y) is on the stage, and is empty, then 
@@ -250,7 +248,7 @@ class Box(Actor):
             res = True
             Actor.move(self, other, dx, dy)
         # If the space is occupied, Ask the Actor to move.
-        elif (check_coor is not None) and on_stage:
+        elif (check_coor is not None) and on_stage and str(check_coor._icon) == '<Surface(24x24x32 SW)>':
             check_coor.move(self, dx, dy)
             check_coor = current_stage.get_actor(new_x, new_y)
             if(check_coor == None):
@@ -261,6 +259,10 @@ class Box(Actor):
         else:
             res = False 
         return res
+
+class hiddenBomb(Box):
+    def __init__(self, icon_file, stage, x, y):
+        Actor.__init__(self, icon_file, stage, x, y)
 
 # COMPLETE THIS CLASS FOR PART 2 OF LAB
 class Wall(Actor): 
@@ -459,14 +461,18 @@ class Monster(Actor):
 
         new_x = self._x + self._dx
         new_y = self._y + self._dy
-
-        if not self._stage.is_in_bounds_x(new_x): 
-            self._dx=-self._dx
+        
+        actor = self._stage.get_actor(new_x, new_y)
+        
+        if not self._stage.is_in_bounds_x(new_x) or actor != None: 
+            self._dx =-self._dx
             bounce_off_edge=True
             
-        if not self._stage.is_in_bounds_y(new_y):
+        if not self._stage.is_in_bounds_y(new_y) or actor != None:
             self._dy =- self._dy
             bounce_off_edge = True
+        else:
+            return Actor.move(self, other, dx, dy)
 
         if bounce_off_edge: 
             return False
@@ -475,14 +481,7 @@ class Monster(Actor):
         # MONSTERS SHOULD BOUNCE BACK FROM BOXES AND OTHER MONSTERS
         # HINT: Use actor = self._stage.get_actor(new_x,new_y)
         # YOUR CODE HERE
-        actor = self._stage.get_actor(new_x, new_y)
-        if actor is not None:
-            res = Actor.move(self, other, -dx, dy)
-            
-        else:
-            res = Actor.move(self, other, dx, dy)
-                
-        return res
+
 
     def is_dead(self):
         '''
