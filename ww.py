@@ -491,5 +491,12 @@ class Monster(Actor):
 
         # TODO: This is part of the assignment and not yet required for the lab.
         # If you have extra time in lab, feel free to get working on this.
-
-        return False
+        is_dead = False
+        curr_position = self.get_position()
+        x_value = curr_position[0]
+        y_value = curr_position[1]
+       
+        actor = self._stage.get_actor(x_value-1, y_value-1)
+        if:
+            pass
+        return is_dead
