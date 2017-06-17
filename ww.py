@@ -15,7 +15,7 @@ class Actor:
         that it should appear on, and the speed with which it should
         update, construct an Actor object.
         '''
-        
+
         self._icon = pygame.image.load(icon_file) # the image image to display of self
         self.set_position(x, y) # self's location on the stage
         self._stage = stage # the stage that self is on
@@ -46,7 +46,7 @@ class Actor:
         (Actor) -> pygame.Surface
         Return the image associated with this Actor.
         '''
-        
+
         return self._icon
 
     def is_dead(self):
@@ -55,7 +55,7 @@ class Actor:
         Return True iff this Actor is not alive.
         '''
         
-        return False
+        return True
 
     def move(self, other, dx, dy):
         '''
@@ -179,19 +179,17 @@ class KeyboardPlayer(Player):
         on_stage = current_stage.is_in_bounds(new_x, new_y)
 
         check_coor = current_stage.get_actor(new_x, new_y)
-        
-        if check_coor is not None:
-            print(check_coor._icon)
-                
+ 
         # FIX THIS ACCORDING TO LAB INSTRUCTIONS IN PART 1
         # TODO: Check if (new_x, new_y) is on the stage. DONE
         #       If it is, then determine if another Actor is occupying that spot. If so,
         #       self asks them to move. If they moved, then we can occupy the spot. Otherwise
         #       we can't move. We return True if we moved and False otherwise.
+
         if on_stage and check_coor == None :
             res = True
             Actor.move(self, other, dx, dy)
-        elif (check_coor is not None) and on_stage:
+        elif (check_coor is not None) and on_stage and str(check_coor._icon) == '<Surface(24x24x32 SW)>':
             check_coor.move(self, dx, dy)
             check_coor = current_stage.get_actor(new_x, new_y)
             if(check_coor == None):
@@ -201,7 +199,6 @@ class KeyboardPlayer(Player):
                 res = False
         else:
             res = False
-
         return res
 
 
@@ -235,7 +232,7 @@ class Box(Actor):
         on_stage = current_stage.is_in_bounds(new_x, new_y)
         
         check_coor = current_stage.get_actor(new_x, new_y)
-
+    
         # FIX THIS ACCORDING TO LAB INSTRUCTIONS IN PART 1
         # TODO:
         # If (new_x, new_y) is on the stage, and is empty, then 
@@ -250,17 +247,22 @@ class Box(Actor):
             res = True
             Actor.move(self, other, dx, dy)
         # If the space is occupied, Ask the Actor to move.
-        elif (check_coor is not None) and on_stage:
+        elif (check_coor is not None) and on_stage and str(check_coor._icon) == '<Surface(24x24x32 SW)>':
             check_coor.move(self, dx, dy)
             check_coor = current_stage.get_actor(new_x, new_y)
             if(check_coor == None):
                 Actor.move(self, other, dx, dy)
                 res = True
+                #if str(check_coor._icon) ==
             else:
                 res = False
         else:
             res = False 
         return res
+
+class hiddenBomb(Box):
+    def __init__(self, icon_file, stage, x, y):
+        Actor.__init__(self, icon_file, stage, x, y)
 
 # COMPLETE THIS CLASS FOR PART 2 OF LAB
 class Wall(Actor): 
@@ -294,12 +296,14 @@ class Stage:
 
         # get a screen of the appropriate dimension to draw on
         self._screen = pygame.display.set_mode(self._pixel_size)
-
+        # Window title
+        pygame.display.set_caption("Warehouse Wars")
+        
     def is_in_bounds(self, x, y):
         '''
         (Stage, int, int) -> bool
         Return True iff the position (x, y) falls within the dimensions of this Stage.'''
-        
+
         return self.is_in_bounds_x(x) and self.is_in_bounds_y(y)
 
     def is_in_bounds_x(self, x):
@@ -307,7 +311,7 @@ class Stage:
         (Stage, int) -> bool
         Return True iff the x-coordinate given falls within the width of this Stage.
         '''
-        
+
         return 0 <= x and x < self._width
 
     def is_in_bounds_y(self, y):
@@ -438,9 +442,16 @@ class Monster(Actor):
         If it's being delayed, return None. Else, return True.
         '''
         
-        if not self.delay(): return 
-        self.move(self, self._dx, self._dy)
-        return True
+        
+        if self.is_dead == True:
+            curr_stage = self._stage
+            curr_stage.remove_actor(self)
+            res = None
+        else:
+            if not self.delay(): return 
+            self.move(self, self._dx, self._dy)
+            res = True
+        return res
 
     def move(self, other, dx, dy):
         '''
@@ -451,7 +462,7 @@ class Monster(Actor):
         bounce back in the opposite direction.
         If a bounce back happened, then return False.
         '''
-        
+
         if other != self: # Noone pushes me around
             return False
 
@@ -459,30 +470,29 @@ class Monster(Actor):
 
         new_x = self._x + self._dx
         new_y = self._y + self._dy
-
-        if not self._stage.is_in_bounds_x(new_x): 
-            self._dx=-self._dx
+        
+        actor = self._stage.get_actor(new_x, new_y)
+        is_dead = self.is_dead()
+    
+        if not self._stage.is_in_bounds_x(new_x) or actor != None: 
+            self._dx =-self._dx
             bounce_off_edge=True
             
-        if not self._stage.is_in_bounds_y(new_y):
+        elif not self._stage.is_in_bounds_y(new_y) or actor != None:
             self._dy =- self._dy
             bounce_off_edge = True
-
+        
+        else:
+            return Actor.move(self, other, dx, dy)
         if bounce_off_edge: 
             return False
+        
 
         # FIX THIS FOR PART 3 OF THE LAB
         # MONSTERS SHOULD BOUNCE BACK FROM BOXES AND OTHER MONSTERS
         # HINT: Use actor = self._stage.get_actor(new_x,new_y)
         # YOUR CODE HERE
-        actor = self._stage.get_actor(new_x, new_y)
-        if actor is not None:
-            res = Actor.move(self, other, -dx, dy)
-            
-        else:
-            res = Actor.move(self, other, dx, dy)
-                
-        return res
+
 
     def is_dead(self):
         '''
@@ -492,5 +502,33 @@ class Monster(Actor):
 
         # TODO: This is part of the assignment and not yet required for the lab.
         # If you have extra time in lab, feel free to get working on this.
+<<<<<<< HEAD
 
-        return False
+=======
+>>>>>>> origin/master
+        is_dead = False
+        curr_position = self.get_position()
+        x_value = curr_position[0]
+        y_value = curr_position[1]
+<<<<<<< HEAD
+
+        actor1 = self._stage.get_actor(x_value-1, y_value)
+        actor2 = self._stage.get_actor(x_value+1, y_value)
+        actor3 = self._stage.get_actor(x_value, y_value-1)
+        actor4 = self._stage.get_actor(x_value, y_value+1)
+        actor5 = self._stage.get_actor(x_value+1, y_value+1)
+        actor6 = self._stage.get_actor(x_value-1, y_value+1)
+        actor7 = self._stage.get_actor(x_value+1, y_value-1)
+        actor8 = self._stage.get_actor(x_value-1, y_value-1)
+
+        if(actor1 and actor2 and actor3 and actor4 and actor5 and actor6 and actor7 and actor8) != None:
+            is_dead = True
+            Actor.is_dead = True
+        return is_dead
+=======
+       
+        actor = self._stage.get_actor(x_value-1, y_value-1)
+        if:
+            pass
+        return is_dead
+>>>>>>> origin/master
